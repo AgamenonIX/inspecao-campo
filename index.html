@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#1e3a5f">
+<title>Inspeção de Campo</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<style>
+  :root{
+    --azul:#1e3a5f;
+    --azul-claro:#2d5586;
+    --verde:#22c55e;
+    --verde-escuro:#16a34a;
+    --vermelho:#dc2626;
+    --amarelo:#f59e0b;
+    --cinza-bg:#f1f5f9;
+    --cinza-borda:#cbd5e1;
+    --texto:#1e293b;
+    --texto-claro:#64748b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:var(--cinza-bg);
+    color:var(--texto);
+    padding-bottom:40px;
+  }
+  header{
+    background:var(--azul);
+    color:#fff;
+    padding:18px 16px;
+    position:sticky;
+    top:0;
+    z-index:10;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+  }
+  header h1{margin:0;font-size:19px;font-weight:600;}
+  header p{margin:4px 0 0;font-size:13px;opacity:.85;}
+
+  #status-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 16px;
+    font-size:12.5px;
+    background:#e2e8f0;
+    color:var(--texto-claro);
+  }
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--texto-claro);}
+  #status-bar.online .dot{background:var(--verde);}
+  #status-bar.offline .dot{background:var(--amarelo);}
+
+  main{max-width:640px;margin:0 auto;padding:16px;}
+
+  .card{
+    background:#fff;
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:14px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+
+  label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px;}
+  label .req{color:var(--vermelho);}
+  .campo{margin-bottom:16px;}
+  .campo:last-child{margin-bottom:0;}
+
+  select,input[type=text],input[type=date],input[type=time],textarea{
+    width:100%;
+    padding:12px;
+    font-size:16px;
+    border:1.5px solid var(--cinza-borda);
+    border-radius:8px;
+    background:#fff;
+    color:var(--texto);
+    font-family:inherit;
+  }
+  select:focus,input:focus,textarea:focus{outline:2px solid var(--azul-claro);border-color:var(--azul-claro);}
+  textarea{resize:vertical;min-height:80px;}
+
+  #btn-foto{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;padding:16px;
+    background:var(--azul-claro);color:#fff;
+    border:none;border-radius:8px;
+    font-size:15px;font-weight:600;
+    cursor:pointer;
+  }
+  #foto-input{display:none;}
+  #miniaturas{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .thumb{position:relative;width:74px;height:74px;border-radius:8px;overflow:hidden;border:1.5px solid var(--cinza-borda);}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .thumb button{
+    position:absolute;top:2px;right:2px;
+    background:rgba(220,38,38,.9);color:#fff;border:none;
+    width:20px;height:20px;border-radius:50%;font-size:13px;line-height:1;
+    cursor:pointer;
+  }
+
+  #btn-enviar{
+    width:100%;padding:18px;
+    background:var(--verde);color:#fff;
+    border:none;border-radius:10px;
+    font-size:17px;font-weight:700;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  #btn-enviar:active{background:var(--verde-escuro);}
+
+  #msg{margin-top:10px;font-size:14px;text-align:center;font-weight:600;min-height:18px;}
+  #msg.ok{color:var(--verde-escuro);}
+  #msg.erro{color:var(--vermelho);}
+
+  .pendentes-header{margin-bottom:6px;}
+  .pendentes-header h2{font-size:15px;margin:0;}
+  .pendentes-header p{font-size:12.5px;color:var(--texto-claro);margin:3px 0 12px;}
+
+  .item-pendente{
+    padding:12px 0;border-bottom:1px solid #eef2f6;
+  }
+  .item-pendente:last-child{border-bottom:none;}
+  .item-topo{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .item-titulo{font-size:13.5px;font-weight:600;}
+  .item-sub{font-size:12px;color:var(--texto-claro);font-weight:400;}
+  .badge{padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap;}
+  .badge.pendente{background:#fef3c7;color:#92400e;}
+  .badge.enviado{background:#dcfce7;color:#166534;}
+  .item-acoes{display:flex;gap:8px;}
+  .btn-mini{
+    flex:1;padding:9px;border-radius:7px;border:none;font-size:13px;font-weight:600;cursor:pointer;
+  }
+  .btn-compartilhar{background:#25d366;color:#fff;}
+  .btn-excluir{background:#fff;color:var(--vermelho);border:1.5px solid #fecaca !important;}
+  #vazio{color:var(--texto-claro);font-size:13.5px;text-align:center;padding:8px 0;}
+
+  .aviso{
+    background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;
+    padding:10px 12px;font-size:12.5px;color:#1e40af;margin-bottom:14px;line-height:1.5;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Inspeção de Campo</h1>
+  <p>Omega Service — S11D / Canaã dos Carajás</p>
+</header>
+
+<div id="status-bar" class="offline">
+  <span class="dot"></span>
+  <span id="status-texto">Verificando conexão...</span>
+</div>
+
+<main>
+
+  <form id="form-inspecao" class="card" autocomplete="off">
+
+    <div class="campo">
+      <label>Contrato <span class="req">*</span></label>
+      <select name="contrato" required>
+        <option value="214">214</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Data <span class="req">*</span></label>
+      <input type="date" name="data" required>
+    </div>
+
+    <div class="campo">
+      <label>Hora <span class="req">*</span></label>
+      <input type="time" name="hora" required>
+    </div>
+
+    <div class="campo">
+      <label>Local</label>
+      <input type="text" name="local" placeholder="Ex: Pátio de estocagem, Britagem...">
+    </div>
+
+    <div class="campo">
+      <label>Empresa <span class="req">*</span></label>
+      <select name="empresa" required>
+        <option value="Omega Service - Pac">Omega Service - Pac</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>G.A. <span class="req">*</span></label>
+      <select name="ga" required>
+        <option value="Integridade Estrutural Pac">Integridade Estrutural Pac</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Coordenação <span class="req">*</span></label>
+      <select name="coordenacao" required>
+        <option value="Julia Silva">Julia Silva</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Gestor Vale <span class="req">*</span></label>
+      <select name="gestor_vale" required>
+        <option value="Aleandra Nascimento">Aleandra Nascimento</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Gestor(a) do Contrato <span class="req">*</span></label>
+      <select name="gestor_contrato" required>
+        <option value="">Selecione...</option>
+        <option value="Alberto Silva">Alberto Silva</option>
+        <option value="Joelma Costa">Joelma Costa</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Tec. de Segurança <span class="req">*</span></label>
+      <select name="tec_seguranca" required>
+        <option value="">Selecione...</option>
+        <option value="Arivelton Rocha">Arivelton Rocha</option>
+        <option value="Duartine Poliana">Duartine Poliana</option>
+        <option value="Geisiane Luz">Geisiane Luz</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Encarregado <span class="req">*</span></label>
+      <select name="encarregado" required>
+        <option value="">Selecione...</option>
+        <option value="Alex Sandro">Alex Sandro</option>
+        <option value="Daniel Ferreira">Daniel Ferreira</option>
+        <option value="Jeorton de Jesus">Jeorton de Jesus</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Supervisor <span class="req">*</span></label>
+      <select name="supervisor" required>
+        <option value="Wanderson Martins">Wanderson Martins</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Fiscal <span class="req">*</span></label>
+      <select name="fiscal" required>
+        <option value="Hildomar">Hildomar</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Desvio <span class="req">*</span></label>
+      <textarea name="desvio" required placeholder="Descreva o desvio encontrado..."></textarea>
+    </div>
+
+    <div class="campo">
+      <label>Ações Tomadas <span class="req">*</span></label>
+      <textarea name="acoes_tomadas" required placeholder="Descreva as ações tomadas..."></textarea>
+    </div>
+
+    <div class="campo">
+      <label>Fotos <span class="req">*</span> <span style="font-weight:400;color:var(--texto-claro);">(pelo menos 1)</span></label>
+      <button type="button" id="btn-foto">📷 Tirar / Escolher Fotos</button>
+      <input type="file" id="foto-input" accept="image/*" capture="environment" multiple>
+      <div id="miniaturas"></div>
+    </div>
+
+    <button type="submit" id="btn-enviar">Salvar Inspeção no Aparelho</button>
+    <div id="msg"></div>
+  </form>
+
+  <div class="card">
+    <div class="pendentes-header">
+      <h2>Inspeções salvas neste celular</h2>
+      <p>Toque em "Enviar WhatsApp" quando quiser mandar para o SESMT — funciona a qualquer momento, mesmo sem sinal agora (o WhatsApp guarda e envia quando a internet voltar).</p>
+    </div>
+    <div id="lista-pendentes"><div id="vazio">Nenhum registro salvo ainda.</div></div>
+  </div>
+
+  <div class="aviso">
+    ℹ️ O envio precisa de um toque seu a cada inspeção — nenhum navegador permite que um site mande mensagens no WhatsApp sozinho, sem você confirmar o contato. Isso é uma proteção de segurança do próprio celular, não uma limitação deste app.
+  </div>
+
+</main>
+
+<script>
+/* ---------- Registrar Service Worker (permite abrir o app offline) ---------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW falhou:', err));
+  });
+}
+
+/* ---------- IndexedDB: armazenamento local das inspeções ---------- */
+const DB_NAME = 'inspecaoDB';
+const STORE = 'submissoes';
+let dbPromise = null;
+
+function abrirDB() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: 'localId' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return dbPromise;
+}
+
+async function salvarSubmissao(item) {
+  const db = await abrirDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(item);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function listarSubmissoes() {
+  const db = await abrirDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => resolve(req.result.sort((a,b) => b.createdAt - a.createdAt));
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function apagarSubmissao(localId) {
+  const db = await abrirDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(localId);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+/* ---------- Compressão de foto (evita arquivos gigantes pra compartilhar em sinal fraco) ---------- */
+function comprimirImagem(file, maxLado = 1600, qualidade = 0.72) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e) => { img.src = e.target.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > height && width > maxLado) { height = Math.round(height * maxLado / width); width = maxLado; }
+      else if (height > maxLado) { width = Math.round(width * maxLado / height); height = maxLado; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', qualidade));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------- Estado de fotos selecionadas (antes de salvar) ---------- */
+let fotosSelecionadas = []; // [{nome, base64}]
+
+document.getElementById('btn-foto').addEventListener('click', () => {
+  document.getElementById('foto-input').click();
+});
+
+document.getElementById('foto-input').addEventListener('change', async (e) => {
+  const arquivos = Array.from(e.target.files);
+  for (const file of arquivos) {
+    try {
+      const base64 = await comprimirImagem(file);
+      fotosSelecionadas.push({ nome: file.name, base64 });
+    } catch (err) {
+      console.error('Erro ao processar foto:', err);
+    }
+  }
+  renderMiniaturas();
+  e.target.value = '';
+});
+
+function renderMiniaturas() {
+  const cont = document.getElementById('miniaturas');
+  cont.innerHTML = '';
+  fotosSelecionadas.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb';
+    div.innerHTML = `<img src="${f.base64}"><button type="button" data-i="${i}">×</button>`;
+    cont.appendChild(div);
+  });
+  cont.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      fotosSelecionadas.splice(Number(btn.dataset.i), 1);
+      renderMiniaturas();
+    });
+  });
+}
+
+/* ---------- Preencher data/hora padrão ---------- */
+function preencherDataHoraPadrao() {
+  const agora = new Date();
+  const form = document.getElementById('form-inspecao');
+  form.data.value = agora.toISOString().slice(0,10);
+  form.hora.value = agora.toTimeString().slice(0,5);
+}
+preencherDataHoraPadrao();
+
+/* ---------- Salvar formulário localmente (não envia nada sozinho) ---------- */
+document.getElementById('form-inspecao').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const msg = document.getElementById('msg');
+
+  if (fotosSelecionadas.length === 0) {
+    msg.textContent = 'Adicione pelo menos 1 foto antes de salvar.';
+    msg.className = 'erro';
+    return;
+  }
+
+  const dados = Object.fromEntries(new FormData(form).entries());
+  const item = {
+    localId: 'insp_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    createdAt: Date.now(),
+    status: 'pendente',
+    dados,
+    fotos: fotosSelecionadas
+  };
+
+  await salvarSubmissao(item);
+
+  form.reset();
+  fotosSelecionadas = [];
+  renderMiniaturas();
+  preencherDataHoraPadrao();
+
+  msg.textContent = '✅ Inspeção salva no aparelho. Role para baixo para enviar.';
+  msg.className = 'ok';
+  setTimeout(() => { msg.textContent = ''; }, 5000);
+
+  await atualizarListaPendentes();
+});
+
+/* ---------- Montar o texto do relatório ---------- */
+function montarTextoResumo(d) {
+  return `INSPEÇÃO DE CAMPO — CONTRATO ${d.contrato}
+Data: ${d.data}   Hora: ${d.hora}
+Local: ${d.local || '-'}
+
+Empresa: ${d.empresa}
+G.A.: ${d.ga}
+Coordenação: ${d.coordenacao}
+Gestor Vale: ${d.gestor_vale}
+Gestor do Contrato: ${d.gestor_contrato}
+Tec. de Segurança: ${d.tec_seguranca}
+Encarregado: ${d.encarregado}
+Supervisor: ${d.supervisor}
+Fiscal: ${d.fiscal}
+
+DESVIO:
+${d.desvio}
+
+AÇÕES TOMADAS:
+${d.acoes_tomadas}`;
+}
+
+/* ---------- Compartilhar uma inspeção (menu nativo do celular) ---------- */
+async function compartilharItem(localId) {
+  const itens = await listarSubmissoes();
+  const item = itens.find(i => i.localId === localId);
+  if (!item) return;
+
+  const texto = montarTextoResumo(item.dados);
+  const arquivos = [];
+
+  try {
+    const blobTexto = new Blob([texto], { type: 'text/plain' });
+    arquivos.push(new File([blobTexto], `inspecao_${item.dados.encarregado || 'sem_nome'}.txt`.replace(/\s+/g,'_'), { type: 'text/plain' }));
+
+    for (let i = 0; i < item.fotos.length; i++) {
+      const resp = await fetch(item.fotos[i].base64);
+      const blob = await resp.blob();
+      arquivos.push(new File([blob], `foto_${i + 1}_${item.localId}.jpg`, { type: 'image/jpeg' }));
+    }
+  } catch (err) {
+    alert('Erro ao preparar os arquivos: ' + err.message);
+    return;
+  }
+
+  const podeCompartilharArquivos = navigator.canShare && navigator.canShare({ files: arquivos });
+
+  if (navigator.share && podeCompartilharArquivos) {
+    try {
+      await navigator.share({
+        files: arquivos,
+        title: 'Inspeção - ' + (item.dados.encarregado || ''),
+        text: texto.slice(0, 300)
+      });
+      item.status = 'enviado';
+      await salvarSubmissao(item);
+      await atualizarListaPendentes();
+    } catch (err) {
+      // AbortError = usuário cancelou o compartilhamento; não é erro real.
+      if (err.name !== 'AbortError') {
+        alert('Não foi possível compartilhar: ' + err.message);
+      }
+    }
+  } else {
+    // Fallback: navegador sem suporte a compartilhar arquivos — baixa tudo
+    // para a pasta de Downloads e o usuário anexa manualmente no WhatsApp.
+    baixarArquivosManualmente(arquivos);
+  }
+}
+
+function baixarArquivosManualmente(arquivos) {
+  alert('Seu navegador não permite enviar direto pro WhatsApp. Os arquivos vão ser baixados — depois é só abrir o WhatsApp e anexá-los manualmente pela pasta Downloads.');
+  arquivos.forEach((arquivo, i) => {
+    setTimeout(() => {
+      const url = URL.createObjectURL(arquivo);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = arquivo.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, i * 400);
+  });
+}
+
+async function excluirItem(localId) {
+  if (!confirm('Excluir este registro do aparelho? Essa ação não pode ser desfeita.')) return;
+  await apagarSubmissao(localId);
+  await atualizarListaPendentes();
+}
+
+/* ---------- Lista de inspeções salvas na tela ---------- */
+async function atualizarListaPendentes() {
+  const itens = await listarSubmissoes();
+  const cont = document.getElementById('lista-pendentes');
+  if (itens.length === 0) {
+    cont.innerHTML = '<div id="vazio">Nenhum registro salvo ainda.</div>';
+    return;
+  }
+  cont.innerHTML = itens.map(i => {
+    const dt = new Date(i.createdAt);
+    const dataFmt = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+    const badgeClasse = i.status === 'enviado' ? 'enviado' : 'pendente';
+    const badgeTexto = i.status === 'enviado' ? 'Enviado' : 'Pendente';
+    return `<div class="item-pendente">
+      <div class="item-topo">
+        <div class="item-titulo">${i.dados.encarregado || 'Sem encarregado'}<div class="item-sub">${dataFmt} · ${i.fotos.length} foto(s)</div></div>
+        <span class="badge ${badgeClasse}">${badgeTexto}</span>
+      </div>
+      <div class="item-acoes">
+        <button class="btn-mini btn-compartilhar" onclick="compartilharItem('${i.localId}')">📤 Enviar WhatsApp</button>
+        <button class="btn-mini btn-excluir" onclick="excluirItem('${i.localId}')">Excluir</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- Barra de status online/offline (informativa) ---------- */
+function atualizarStatusBar() {
+  const bar = document.getElementById('status-bar');
+  const texto = document.getElementById('status-texto');
+  if (navigator.onLine) {
+    bar.className = 'online';
+    texto.textContent = 'Com internet agora';
+  } else {
+    bar.className = 'offline';
+    texto.textContent = 'Sem internet — o app funciona normalmente offline';
+  }
+}
+window.addEventListener('online', atualizarStatusBar);
+window.addEventListener('offline', atualizarStatusBar);
+
+/* ---------- Inicialização ---------- */
+atualizarStatusBar();
+atualizarListaPendentes();
+</script>
+
+</body>
+</html>
