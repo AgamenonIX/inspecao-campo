@@ -165,6 +165,17 @@
         <option value="214">214</option>
       </select>
     </div>
+    
+     <div class="campo">
+      <label>Tipo da inspeção <span class="req">*</span></label>
+      <select name="Tipo_da_inspeção" required>
+        <option value="Ver agir">Ver agir</option>
+        <option value="Inspeção de Segurança">Inspeção de Segurança</option>
+        <option value="Inspeção de Ambiente">Inspeção de Ambiente</option>
+         <option value="Inspeção de 5s">Inspeção de 5s</option>
+         <option value="Inspeção de N3">Inspeção de N3</option>        
+      </select>
+    </div>
 
     <div class="campo">
       <label>Data <span class="req">*</span></label>
@@ -503,7 +514,7 @@ setInterval(() => { if (navigator.onLine) sincronizarTudo(); }, 30000);
 /* ---------- Montar o texto do relatório (modelo com emojis, igual ao usado no WhatsApp) ---------- */
 function montarTextoResumo(d) {
   return `📗 INSPEÇÃO DE SEGURANÇA
-📍 VER E AGIR
+📍 ${d.Tipo_da_inspeção}
 
 📗 Contrato ${d.contrato}
 🕐 Data: ${d.data}
