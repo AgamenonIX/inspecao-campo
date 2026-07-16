@@ -266,14 +266,32 @@
     </div>
 
     <div class="campo">
-      <label>Desvio <span class="req">*</span></label>
-      <textarea name="desvio" required placeholder="Descreva o desvio encontrado..."></textarea>
-    </div>
-
-    <div class="campo">
-      <label>Ações Tomadas <span class="req">*</span></label>
-      <textarea name="acoes_tomadas" required placeholder="Descreva as ações tomadas..."></textarea>
-    </div>
+<label>Situação</label>
+<select name="situacao" id="campo-situacao">
+<option value="">Selecione...</option>
+<option value="Desvio">Desvio</option>
+<option value="Conformidade">Conformidade (tudo certo)</option>
+</select>
+</div>
+<div id="bloco-desvio" style="display:none;">
+<div class="campo">
+<label>Desvio</label>
+<textarea name="desvio" id="campo-desvio"
+placeholder="Descreva o desvio encontrado..."></textarea>
+</div>
+<div class="campo">
+<label>Ações Tomadas</label>
+<textarea name="acoes_tomadas" id="campo-acoes"
+placeholder="Descreva as ações tomadas..."></textarea>
+</div>
+</div>
+<div id="bloco-conformidade" style="display:none;">
+<div class="campo">
+<label>Conformidade</label>
+<textarea name="conformidade" id="campo-conformidade"
+placeholder="Descreva a conformidade..."></textarea>
+</div>
+</div>
 
     <div class="campo">
       <label>Fotos <span class="req">*</span> <span style="font-weight:400;color:var(--texto-claro);">(pelo menos 1)</span></label>
@@ -434,7 +452,15 @@ function preencherDataHoraPadrao() {
   form.hora.value = agora.toTimeString().slice(0,5);
 }
 preencherDataHoraPadrao();
-
+  
+document.getElementById('campo-situacao').addEventListener('change', (e) => {
+const valor = e.target.value;
+document.getElementById('bloco-desvio').style.display =
+valor === 'Desvio' ? 'block' : 'none';
+document.getElementById('bloco-conformidade').style.display =
+valor === 'Conformidade' ? 'block' : 'none';
+});
+  
 /* ---------- Salvar formulário localmente (não envia nada sozinho) ---------- */
 document.getElementById('form-inspecao').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -513,6 +539,17 @@ window.addEventListener('online', () => { atualizarStatusBar(); sincronizarTudo(
 setInterval(() => { if (navigator.onLine) sincronizarTudo(); }, 30000);
 
 /* ---------- Montar o texto do relatório (modelo com emojis, igual ao usado no WhatsApp) ---------- */
+
+function montarBlocoSituacao(d) {
+  if (d.situacao === 'Conformidade') {
+    return `✅ CONFORMIDADE: ${d.conformidade || '-'}`;
+  }
+  if (d.situacao === 'Desvio') {
+    return `🔴 Desvio: ${d.desvio || '-'}\n\n✅ Ações tomadas: ${d.acoes_tomadas || '-'}`;
+  }
+  return '';
+}
+  
 function montarTextoResumo(d) {
   return `📗 INSPEÇÃO DE SEGURANÇA
 📍 ${d.Tipo_da_inspeção}
@@ -532,9 +569,7 @@ function montarTextoResumo(d) {
 📗 Fisc.: ${d.fiscal}
 📗 *Registro Fotográfico*
 
-🔴 Desvio: ${d.desvio}
-
-✅ Ações tomadas: ${d.acoes_tomadas}
+${montarBlocoSituacao(d)}
 
 
 📗 Rac's Salvam Vidas
