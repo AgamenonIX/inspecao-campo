@@ -229,12 +229,20 @@
     </div>
 
     <div class="campo">
-      <label>Tec. de Segurança_Meio-Ambiente <span class="req">*</span></label>
-      <select name="tec_seguranca_Meio_Ambiente" required>
+      <label>Tec. de Segurança <span class="req">*</span></label>
+      <select name="tec_seguranca" required>
         <option value="">Selecione...</option>
         <option value="Arivelton Rocha">Arivelton Rocha</option>
         <option value="Duartine Poliana">Duartine Poliana</option>
         <option value="Geisiane Luz">Geisiane Luz</option>
+        <option value="Outros">Outors</option>
+      </select>
+    </div>
+    
+    <div class="campo">
+      <label>Tec. de Meio-Ambiente <span class="req">*</span></label>
+      <select name="tec_Meio_Ambiente" required>
+        <option value="">Selecione...</option>
          <option value="Bianca Martins">Bianca Martins</option>
         <option value="Outros">Outors</option>
       </select>
@@ -563,7 +571,8 @@ function montarTextoResumo(d) {
 📗 Coordenação: ${d.coordenacao}
 📗 Gestor Vale: ${d.gestor_vale}
 📗 Gestor (a) do Contrato: ${d.gestor_contrato}
-📗 Téc. de Segurança: ${d.tec_seguranca_Meio_Ambiente}
+📗 Téc. de Segurança: ${d.tec_seguranca}
+📗 Téc. de Segurança:${d.tec_Meio_Ambiente}
 📗 Supe.: ${d.supervisor}
 📗 Enc.: ${d.encarregado}
 📗 Fisc.: ${d.fiscal}
