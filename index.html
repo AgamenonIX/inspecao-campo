@@ -236,7 +236,7 @@
         <option value="Arivelton Rocha">Arivelton Rocha</option>
         <option value="Duartine Poliana">Duartine Poliana</option>
         <option value="Geisiane Luz">Geisiane Luz</option>
-        <option value="Outros">Outors</option>
+        <option value="Outros">Outros</option>
       </select>
     </div>
     
@@ -245,7 +245,7 @@
       <select name="tec_Meio_Ambiente" required>
         <option value="">Selecione...</option>
          <option value="Bianca Martins">Bianca Martins</option>
-        <option value="Outros">Outors</option>
+        <option value="Outros">Outros</option>
       </select>
     </div>
 
@@ -457,8 +457,10 @@ function renderMiniaturas() {
 function preencherDataHoraPadrao() {
   const agora = new Date();
   const form = document.getElementById('form-inspecao');
-  form.data.value = agora.toISOString().slice(0,10);
-  form.hora.value = agora.toTimeString().slice(0,5);
+  // Usa o horário local do celular (antes usava UTC e, depois das 21h, trazia o dia seguinte)
+  const dd = n => String(n).padStart(2,'0');
+  form.data.value = `${agora.getFullYear()}-${dd(agora.getMonth()+1)}-${dd(agora.getDate())}`;
+  form.hora.value = `${dd(agora.getHours())}:${dd(agora.getMinutes())}`;
 }
 preencherDataHoraPadrao();
   
@@ -560,8 +562,7 @@ function montarBlocoSituacao(d) {
 }
   
 function montarTextoResumo(d) {
-  return `📗 INSPEÇÃO DE SEGURANÇA
-📍 ${d.Tipo_da_inspeção}
+  return `📗 ${(d.Tipo_da_inspeção || 'Inspeção').toUpperCase()}
 
 📗 Contrato ${d.contrato}
 🕐 Data: ${d.data}
@@ -573,7 +574,7 @@ function montarTextoResumo(d) {
 📗 Gestor Vale: ${d.gestor_vale}
 📗 Gestor (a) do Contrato: ${d.gestor_contrato}
 📗 Téc. de Segurança: ${d.tec_seguranca}
-📗 Téc. de Segurança:${d.tec_Meio_Ambiente}
+📗 Téc. de Meio-Ambiente: ${d.tec_Meio_Ambiente}
 📗 Supe.: ${d.supervisor}
 📗 Enc.: ${d.encarregado}
 📗 Fisc.: ${d.fiscal}
