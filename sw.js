@@ -3,7 +3,7 @@
 // Os DADOS preenchidos ficam separados, no IndexedDB (ver index.html) — isso aqui só
 // garante que a PÁGINA em si abra offline.
 
-const CACHE_NAME = 'inspecao-app-v14'; // aumente o número sempre que atualizar o app
+const CACHE_NAME = 'inspecao-app-v15'; // aumente o número sempre que atualizar o app
 const ARQUIVOS_PARA_CACHE = [
   './',
   './index.html',
